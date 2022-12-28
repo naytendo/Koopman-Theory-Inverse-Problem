@@ -2,6 +2,7 @@
 # Git notes:
 
 Always do the following, when first starting out:
+
 0. git checkout master
 1. git pull
 2. git checkout local

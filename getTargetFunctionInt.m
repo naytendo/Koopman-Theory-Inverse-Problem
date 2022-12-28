@@ -1,4 +1,5 @@
 function [interps,coefs] = getTargetFunctionInt(rho1,rho2,kernelType,targetHyper)
+% Generating the target function through a kernel matrix based on the norm of samples in 2 dimensional (intrinsic) space 
 %% Generate interpolating inputs for target function
 n1 = 16;
 n2 = 8;

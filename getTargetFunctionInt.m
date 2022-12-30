@@ -1,10 +1,12 @@
 function [interps,coefs] = getTargetFunctionInt(rho1,rho2,kernelType,targetHyper)
 %% Generate interpolating inputs for target function
-n1 = 16;
-n2 = 8;
+n1 = 16+1;
+n2 = 8+1;
 theta1Range = linspace(0,2*pi,n1);
 theta2Range = linspace(0,2*pi,n2);
-m = n1*n2;
+theta1Range = theta1Range(1:end-1);
+theta2Range = theta2Range(1:end-1);
+m = (n1-1)*(n2-1);
 [theta1Interps,theta2Interps] = meshgrid(theta1Range,theta2Range);
 
 
@@ -19,8 +21,8 @@ p_samps = zeros(m,1);
 %% making the list of centers
 interps = zeros(m,2);
 index = 1;
-for ii = 1:n2
-    for jj = 1:n1
+for ii = 1:n2-1
+    for jj = 1:n1-1
         interps(index,:) = [theta1Interps(ii,jj),theta2Interps(ii,jj)];
         p_samps(index) = p(u(ii,jj),v(ii,jj),w(ii,jj));
         index = index + 1;
@@ -35,4 +37,5 @@ for pp = 1:m
         A(pp,nn) = kernel(kernelType,interps(nn,:),interps(pp,:),targetHyper);
     end
 end
+title(cond(A))
 coefs = pinv(A)*p_samps;

@@ -7,7 +7,7 @@ targetHyper = 1;
 %%
 
 
-delta = [0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03 0.02];
+delta = [0.1 0.09 0.08 0.07 0.06 0.05 0.04 0.03];
 error = zeros(1,length(delta));
 condNum = zeros(1,length(delta));
 for dd = 1:length(delta)
@@ -36,7 +36,7 @@ boolean = 1;
 if boolean
 %     T = (1+dim^2*factorial(dim))^(tau+1)/Gamma/delta(dd);
     T = sqrt(q^2+1);
-    t = 1:0.01:25;
+    t = 1:0.001:25;
     theta1_Orb = alpha(1)*t;
     theta2_Orb = alpha(2)*t;
     mod_theta1_Orb = zeros(length(theta1_Orb),1);
@@ -131,7 +131,7 @@ if boolean
     
 
     error(dd) = max(abs(functionEstimate - target_Func_True));
-    condNum(dd) = cond(K);
+%     condNum(dd) = cond(K);
 %     figure()
 %     plot(functionEstimate)
 %     hold on
@@ -144,8 +144,8 @@ end
 
 loglog(delta, error,'o-')
 hold on
-loglog(delta,10*delta.^2,'--')
-loglog(delta,condNum,'.-')
+loglog(delta,100*delta.^2,'--')
+% loglog(delta,condNum,'.-')
 xlabel('$h_{\Xi_n,M}$','interpreter','latex')
-legend('$l_\infty$ norm','$h^2_{\Xi_n,M}$','cond(K)','interpreter','latex')
+% legend('$l_\infty$ norm','$h^2_{\Xi_n,M}$','interpreter','latex')
 

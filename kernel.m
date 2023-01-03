@@ -36,7 +36,9 @@ switch type
     case 'matern32'
         kern = (1 + sqrt(3)*r/beta)*exp(-sqrt(3)*r/beta);
     case 'matern52'
-        kern = (1 + sqrt(5)*r/beta + 5/3*r^2/beta^2)*exp(-sqrt(5)*r/beta);
+        kern = (1 + sqrt(5)*r/beta + 5/3*r^2/(beta^2))*exp(-sqrt(5)*r/beta);
+    case 'matern72'
+        kern = (1+ sqrt(7)*r + 7/5*r^2/(beta^2)+7/15*sqrt(7)*r^3/(beta^3))*exp(-sqrt(7)*r/beta);
     otherwise 
    
         error('Kernel type is not supported!');

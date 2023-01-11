@@ -1,7 +1,9 @@
+
 function [interps,coefs] = getTargetFunctionExt(rho1,rho2,kernelType,targetHyper,nu)
 %% Generate interpolating inputs for target function
 n1 = 17;
 n2 = 9;
+
 theta1Range = linspace(0,2*pi,n1);
 theta2Range = linspace(0,2*pi,n2);
 theta1Range = theta1Range(1:end-1);
@@ -40,3 +42,4 @@ for pp = 1:m
 end
 % title(cond(A))
 coefs = pinv(A)*p_samps;
+

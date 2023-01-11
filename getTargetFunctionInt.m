@@ -1,4 +1,5 @@
 function [interps,coefs] = getTargetFunctionInt(rho1,rho2,kernelType,targetHyper)
+% Generating the target function through a kernel matrix based on the norm of samples in 2 dimensional (intrinsic) space 
 %% Generate interpolating inputs for target function
 n1 = 16+1;
 n2 = 8+1;
@@ -37,5 +38,6 @@ for pp = 1:m
         A(pp,nn) = kernel(kernelType,interps(nn,:),interps(pp,:),targetHyper);
     end
 end
-title(cond(A))
+
 coefs = pinv(A)*p_samps;
+

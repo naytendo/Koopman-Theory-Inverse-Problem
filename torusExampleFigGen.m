@@ -44,12 +44,11 @@ delta = 0.05;
 q = sqrt((0.5/delta)^2-1);
 alpha0 = [q
 1];
-% tau = 1.25;
-% 
-% [boolean,kProb,checks] = isDiophantine(delta,alpha0,gamma,tau);
+tau = 1.25;
+
+[boolean,kProb,checks] = isDiophantine(delta,alpha0,gamma,tau);
 
 alpha = alpha0/norm(alpha0);
-boolean = 1;
 if boolean
 %     T = (1+n^2*factorial(n))^(tau+1)/gamma/delta;
     T = sqrt(q^2+1);

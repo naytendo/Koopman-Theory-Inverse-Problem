@@ -1,9 +1,9 @@
-function [interps,coefs] = getTargetFunctionExt(rho1,rho2,kernelType,targetHyper)
-% Generating the target function through a kernel matrix based on the norm of samples in 3 dimensional space 
-%% Generate interpolating inputs for target function
 
-n1 = 16;
-n2 = 8;
+function [interps,coefs] = getTargetFunctionExt(rho1,rho2,kernelType,targetHyper,nu)
+%% Generate interpolating inputs for target function
+n1 = 17;
+n2 = 9;
+
 theta1Range = linspace(0,2*pi,n1);
 theta2Range = linspace(0,2*pi,n2);
 theta1Range = theta1Range(1:end-1);
@@ -37,7 +37,7 @@ end
 A = zeros(m,m);
 for pp = 1:m
     for nn = 1:m
-        A(pp,nn) = kernel(kernelType,interps(nn,:),interps(pp,:),targetHyper);
+        A(pp,nn) = kernel(kernelType,interps(nn,:),interps(pp,:),targetHyper,nu);
     end
 end
 % title(cond(A))

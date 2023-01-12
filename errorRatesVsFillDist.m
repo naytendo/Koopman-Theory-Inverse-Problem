@@ -7,26 +7,13 @@ nu = 1/2*(b+dim/2);
 targetHyper = 1;
 [interps,coefs] = getTargetFunctionExt(rho1,rho2,targetType,targetHyper,nu-dim/2);
 
-%% Creating evaluation orbit
-
-q_Eval = 120;
-alpha0_Eval = [q_Eval,1];
-alpha_Eval = alpha0_Eval/norm(alpha0_Eval);
-t_Eval = 1:0.005:sqrt(q_Eval^2+1)+1;
-w1_Eval = alpha_Eval(1);
-w2_Eval = alpha_Eval(2);
-x_E = (rho1+rho2*cos(2*pi*w2_Eval*t_Eval)).*cos(2*pi*w1_Eval*t_Eval);
-y_E = (rho1+rho2*cos(2*pi*w2_Eval*t_Eval)).*sin(2*pi*w1_Eval*t_Eval);
-z_E = -rho2*sin(2*pi*w2_Eval*t_Eval);
-x_Eval = [x_E;y_E;z_E]'; 
-
 %% Creating orbit to generate centers
 
 delta = 0.02;
-% scaling = sqrt((2*pi*rho1)^2+(2*pi*rho2)^2);
-scaling = 2*pi*rho2;
-deltaScaled = delta/scaling;
-q = floor(sqrt((1/2/deltaScaled)^2-1))+1;
+scaling = sqrt((2*pi*rho1)^2+(2*pi*rho2)^2);
+% scaling = 2*pi*rho2;
+fillDist = 2*delta/scaling;
+q = floor(sqrt((1/2/fillDist)^2-1))+1;
 alpha0 = [q
 1];
 alpha = alpha0/norm(alpha0);
@@ -38,12 +25,39 @@ y = (rho1+rho2*cos(2*pi*w2*t)).*sin(2*pi*w1*t);
 z = -rho2*sin(2*pi*w2*t);
 xSamp = [x;y;z]'; 
 
+
+%% Creating evaluation points
+
+n1 = 256+1;
+n2 = 64+1;
+theta1Range = linspace(0,2*pi,n1);
+theta2Range = linspace(0,2*pi,n2);
+theta1Range = theta1Range(1:end-1);
+theta2Range = theta2Range(1:end-1);
+Eval_points = (n1-1)*(n2-1);
+[theta1Evals,theta2Evals] = meshgrid(theta1Range,theta2Range);
+
+
+u = (rho1+rho2*cos(theta2Evals)).*cos(theta1Evals);
+v = (rho1+rho2*cos(theta2Evals)).*sin(theta1Evals);
+w = rho2*sin(theta2Evals);
+
+x_Eval = zeros(Eval_points,3);
+index = 1;
+for ii = 1:n2-1
+    for jj = 1:n1-1
+        x_Eval(index,:) = [u(ii,jj),v(ii,jj),w(ii,jj)];
+        index = index + 1;
+    end
+end
+
 %%
 
 
 % delta = [0.045 0.038 0.033 0.025];
 delta = [0.4 0.2 0.15 0.12 0.1 0.08 0.06 0.04 0.03 0.025 0.02];
-error = zeros(1,length(delta));
+linfty_error = zeros(1,length(delta));
+l2_error = zeros(1,length(delta));
 condNum = zeros(1,length(delta));
 
 for dd = 1:length(delta)
@@ -94,17 +108,17 @@ if boolean
             K(pp,jj) = kernel(type,centers(jj,:),centers(pp,:),hyperParam,[]);
         end
     end
-
-    estimateCoefs = pinv(K)*target_Func_Orb;
+%     L = chol(K,'lower');
+    estimateCoefs = (K)\(target_Func_Orb);
     
 
     
-    functionEstimate = zeros(length(t_Eval),1);
+    functionEstimate = zeros(Eval_points,1);
     target_Func_True = zeros(length(functionEstimate),1);
 
 
 %%
-    for ii = 1:length(t_Eval)
+    for ii = 1:Eval_points
         kernVector = zeros(size(centers,1),1);
         for cc = 1:size(centers,1)
             kernVector(cc) = kernel(type,centers(cc,:),x_Eval(ii,:),hyperParam,[]);
@@ -117,9 +131,11 @@ if boolean
         target_Func_True(ii) = coefs'*trueKV;
 
     end
+    error = abs(functionEstimate - target_Func_True); 
     
 
-    error(dd) = max(abs(functionEstimate - target_Func_True));
+    linfty_error(dd) = max(error);
+    l2_error(dd) = sqrt(sum(error.^2));
     condNum(dd) = cond(K);
 %     figure()
 %     plot(functionEstimate)
@@ -130,24 +146,27 @@ if boolean
 % plot(mod_theta2_Orb,mod_theta1_Orb,'.')
 % title(strcat('\delta =',num2str(delta(dd)),', Direction = [',num2str(q), ',1]^T','.'))
 
-% figure()
-% plot3(centers(:,1),centers(:,2),centers(:,3),'ko')
-% hold on
-% plot3(x,y,z,'k')
-% title(strcat('\delta =',num2str(delta(dd)),', Direction = [',num2str(q), ',1]^T'))
+figure()
+plot3(centers(:,1),centers(:,2),centers(:,3),'ko')
+hold on
+plot3(x,y,z,'k')
+title(strcat('\delta =',num2str(delta(dd))))
 end
 
 end
 %%
 figure()
-loglog(delta, error,'o-')
+loglog(delta, linfty_error,'rx-')
 hold on
-loglog(delta,10^3*delta.^(2.5),'--')
+loglog(delta, 0.01*l2_error,'bo-')
+loglog(delta,8^2*delta.^(2.5),'k-.')
+loglog(delta,5^3*delta.^(3.5),'k--')
 xlabel('$h_{\Xi_n,M}$','interpreter','latex')
 ylabel('Error')
+ legend('$l_\infty$ error','$l_2$ error','$h^{2.5}_{\Xi_n,M}$','$h^{3.5}_{\Xi_n,M}$','interpreter','latex')
 figure()
 loglog(delta,condNum,'.-')
 ylabel('cond(K)')
 xlabel('$h_{\Xi_n,M}$','interpreter','latex')
-% legend('$l_\infty$ norm','$h^2_{\Xi_n,M}$','interpreter','latex')
+
 

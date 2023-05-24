@@ -34,16 +34,27 @@ for ii = 1:size(targetFunc_Mesh,1)
 end
 figure()
 surf(u_Mesh,v_Mesh,w_Mesh,targetFunc_Mesh,'EdgeColor','none','FaceAlpha',0.9);
+colormap(jet(16))
 colorbar
-hold on
 grid on
-%%
-plot3(interps(:,1),interps(:,2),interps(:,3),'k.','markersize',10)
 set(gca,'fontsize',20)
 xlabel('$u$','interpreter','latex')
 ylabel('$v$','interpreter','latex')
 zlabel('$w$','interpreter','latex')
 
+
+figure()
+surf(u_Mesh,v_Mesh,w_Mesh,'FaceColor','yellow','edgecolor','none');
+hold on
+grid on
+plot3(interps(:,1),interps(:,2),interps(:,3),'b.','markersize',15)
+set(gca,'fontsize',20)
+xlabel('$u$','interpreter','latex')
+ylabel('$v$','interpreter','latex')
+zlabel('$w$','interpreter','latex')
+
+
+%%
 n = 2;
 
 gamma = 0.85;

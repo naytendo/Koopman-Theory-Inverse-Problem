@@ -1,23 +1,35 @@
-rho1 = 1/4;
-rho2 = 1/6;
+rho1 = 3;
+rho2 = 1/3;
 targetType = 'matern';
 b = 4;
 dim = 3;
 nu = 1/2*(b+dim/2);
 targetHyper = 1;
-[interps,coefs] = getTargetFunctionExt(rho1,rho2,targetType,targetHyper,nu-dim/2);
+[interps,coefs] = getTargetFunctionAlongOrbit(rho1,rho2,targetType,targetHyper,nu-dim/2);
 
 %% Creating filling orbit 
 
-delta = 0.007;
-scaling = sqrt((2*pi*rho1)^2+(2*pi*rho2)^2)/sqrt(2);
-% scaling = 2*pi*rho2;
-fillDist = 2*delta/scaling;
-q = floor(sqrt((1/2/fillDist)^2-1))+1;
+% delta = 0.007;
+% scaling = sqrt((2*pi*rho1)^2+(2*pi*rho2)^2)/sqrt(2);
+% % scaling = 2*pi*rho2;
+% fillDist = 2*delta/scaling;
+% q = floor(sqrt((1/2/fillDist)^2-1))+1;
+% alpha0 = [q
+% 1];
+% alpha = alpha0/norm(alpha0);
+% t = 0:0.0005:sqrt(q^2+1);
+% w1 = alpha(1);
+% w2 = alpha(2);
+% x = (rho1+rho2*cos(2*pi*w2*t)).*cos(2*pi*w1*t);
+% y = (rho1+rho2*cos(2*pi*w2*t)).*sin(2*pi*w1*t);
+% z = -rho2*sin(2*pi*w2*t);
+% xSamp = [x;y;z]'; 
+
+q = 1/6;
 alpha0 = [q
 1];
 alpha = alpha0/norm(alpha0);
-t = 0:0.0005:sqrt(q^2+1);
+t = 0:0.001:sqrt((1/q)^2+1);
 w1 = alpha(1);
 w2 = alpha(2);
 x = (rho1+rho2*cos(2*pi*w2*t)).*cos(2*pi*w1*t);
@@ -25,9 +37,27 @@ y = (rho1+rho2*cos(2*pi*w2*t)).*sin(2*pi*w1*t);
 z = -rho2*sin(2*pi*w2*t);
 xSamp = [x;y;z]'; 
 
-x_Eval = xSamp;
-Eval_points = length(x_Eval);
-% %% Creating evaluation points
+% Creates Eval Points
+x_Eval = zeros(length(xSamp),3); 
+EvPts = 1;
+x_Eval(EvPts,:) = xSamp(1,:);
+separation = 0.025;
+for nn = 1:length(xSamp)
+    check = 0;
+    for jj = 1:EvPts
+        if norm(x_Eval(jj,:)-xSamp(nn,:)) > 2*separation
+            check = check +1;
+        end
+    end
+    if check == EvPts
+        x_Eval(EvPts+1,:) = xSamp(nn,:);
+        EvPts = EvPts+1;
+    end
+end
+
+
+Eval_points = EvPts;
+% Another way to creating evaluation points
 % 
 % n1 = 256+1;
 % n2 = 64+1;
@@ -51,18 +81,27 @@ Eval_points = length(x_Eval);
 %         index = index + 1;
 %     end
 % end
+figure(1)
+hold on
 
+figure(2)
+hold on
+
+figure(3)
+hold on
+
+mkr = ['-s','-o','-d','-v'];
 %% Determine Quadrature Points
-
+hQ = [0.1 0.08 0.04 0.01];
+for hh = 1:length(hQ)
 M0 = 1;
 fints = zeros(size(xSamp,1)-1,size(xSamp,2));
 fints(M0,:) = xSamp(2,:);
 last = fints(M0,:);
 
-h = 0.01;
 for mm = 1:length(xSamp)-1
     current = xSamp(mm+1,:);
-    if norm(last-current) > h
+    if norm(last-current) > hQ(hh)
         M0 = M0+1;
         fints(M0,:) = xSamp(mm+1,:);
         last = current;
@@ -86,24 +125,18 @@ for ii = 1:M
      end
      yQuads(ii) = coefs'*targetBasis;
 end
-
-
 W = diag(mu0);
-
 
 %%
 
 % delta = [0.045 0.038 0.033 0.025];
-delta = [0.1 0.08 0.07 0.06 0.05 0.04 0.033 0.028 0.025 0.022 0.02 0.018];
+delta = [0.8 0.4 0.2 0.1 0.05 0.025];
 linfty_error = zeros(1,length(delta));
 l2_error = zeros(1,length(delta));
 condNum = zeros(1,length(delta));
-condNumRed = zeros(1,length(delta));
-condNumReg = zeros(1,length(delta));
+% condNumRed = zeros(1,length(delta));
+% condNumReg = zeros(1,length(delta));
 funcDim = zeros(1,length(delta));
-
-
-
 
 for dd = 1:length(delta)
     centers = zeros(length(xSamp),3); 
@@ -124,7 +157,7 @@ for dd = 1:length(delta)
     end
     % centers = xSamp(:,1:3:end)';
     centers = centers(1:N,:);
-    hyperParam = 1;
+    hyperParam = 1.7;
     K = zeros(N,M);
     type = 'wendland32';
     for pp = 1:M
@@ -173,31 +206,41 @@ for dd = 1:length(delta)
 % plot3(x,y,z,'k')
 % title(strcat('\delta =',num2str(delta(dd))))
 end
+figure(1)
+loglog(delta, 0.03*l2_error,mkr(2*hh-1:2*hh),'linewidth',1.5)
 
-%%
-figure()
-loglog(delta, linfty_error,'rx-')
-hold on
-loglog(delta, 0.01*l2_error,'bo-')
-loglog(delta,0.25*delta.^(2.5),'r-.')
-loglog(delta,1.5*delta.^(3.5),'b--')
-xlabel('$h_{\Xi_n,M}$','interpreter','latex')
-ylabel('Error')
-legend('$l_\infty$ error','$l_2$ error','$h^{2.5}_{\Xi_n,M}$','$h^{3.5}_{\Xi_n,M}$','interpreter','latex')
-set(gca,'fontsize',20)
+
+figure(2)
+loglog(delta, condNum,mkr(2*hh-1:2*hh),'linewidth',1.5)
+
+
+figure(3)
+loglog(delta, funcDim,mkr(2*hh-1:2*hh),'linewidth',1.5)
+
+
 % legend('$l_\infty$ error','$l_2$ error','interpreter','latex')
-
-%%
-figure()
-loglog(delta,condNum,'.-')
-ylabel('cond(K)')
+end
+figure(1)
+loglog(delta,200*delta.^(3),'k-.')
 xlabel('$h_{\Xi_n,M}$','interpreter','latex')
+ylabel('$l_\infty$ error','interpreter','latex')
+legend(sprintf('$h_Q = %.2f$',hQ(1)),sprintf('$h_Q = %.2f$',hQ(2)),sprintf('$h_Q = %.2f$',hQ(3)),sprintf('$h_Q = %.2f$',hQ(4)),'$h^{2.5}_{\Xi_n,M}$','interpreter','latex')
 set(gca,'fontsize',20)
+set(gca,'XScale','log')
+set(gca,'YScale','log')
 
-%%
-figure()
-plot(delta,funcDim)
+figure(2)
 xlabel('$h_{\Xi_n,M}$','interpreter','latex')
-ylabel('N')
+ylabel('Condition Number','interpreter','latex')
+legend(sprintf('$h_Q = %.2f$',hQ(1)),sprintf('$h_Q = %.2f$',hQ(2)),sprintf('$h_Q = %.2f$',hQ(3)),sprintf('$h_Q = %.2f$',hQ(4)),'interpreter','latex')
 set(gca,'fontsize',20)
+set(gca,'XScale','log')
+set(gca,'YScale','log')
 
+figure(3)
+xlabel('$h_{\Xi_n,M}$','interpreter','latex')
+ylabel('$N$','interpreter','latex')
+legend(sprintf('$h_Q = %.2f$',hQ(1)),sprintf('$h_Q = %.2f$',hQ(2)),sprintf('$h_Q = %.2f$',hQ(3)),sprintf('$h_Q = %.2f$',hQ(4)),'interpreter','latex')
+set(gca,'fontsize',20)
+set(gca,'XScale','log')
+set(gca,'YScale','log')

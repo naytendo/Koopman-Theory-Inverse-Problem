@@ -1,5 +1,5 @@
 
-function [interps,coefs] = getTargetFunctionExt(rho1,rho2,kernelType,targetHyper,nu)
+function [interps,coefs] = getTargetFunctionNew(rho1,rho2,targetType,targetScale,targetPar)
 %% Generate interpolating inputs for target function
 n1 = 17;
 n2 = 9;
@@ -33,12 +33,7 @@ for ii = 1:n2-1
 end
 
 %% calculating coefficients for target function
-A = zeros(m,m);
-for pp = 1:m
-    for nn = 1:m
-        A(pp,nn) = kernel(kernelType,interps(nn,:),interps(pp,:),targetHyper,nu);
-    end
-end
+A = real(kermat(interps,interps,targetType,targetPar,targetScale));
 % title(cond(A))
-coefs = pinv(A)*p_samps;
+coefs = A\p_samps;
 
